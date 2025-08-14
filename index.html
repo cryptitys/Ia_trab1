@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama Chat Pro ⌬ Definitivo</title>
+  <meta name="description" content="Versão definitiva do Chat com IA Ollama, unificando histórico, configurações avançadas por chat e agente de pesquisa.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌬</text></svg>">
+  
+  <!-- Dependências Externas -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #8A2BE2; --color-primary-dark: #7B1FA2; --color-primary-light: #9C4DFF;
+      --color-secondary: #03A9F4; --color-error: #F44336; --color-success: #4CAF50;
+      --color-warning: #FFC107; --color-background: #f4f4f9; --color-surface: #ffffff;
+      --color-surface-variant: #eeeeee; --color-border: #e0e0e0; --color-text-primary: #212121;
+      --color-text-secondary: #757575; --color-text-muted: #9e9e9e; --font-family: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace; --border-radius: 1rem; --border-radius-sm: 0.5rem;
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); --spacing-xs: 0.25rem; --spacing-sm: 0.5rem;
+      --spacing-md: 1rem; --spacing-lg: 1.5rem; --spacing-xl: 2rem;
+    }
+    .dark-mode {
+      --color-primary: #9C4DFF; --color-primary-dark: #8A2BE2; --color-primary-light: #B388FF;
+      --color-background: #121212; --color-surface: #1E1E1E; --color-surface-variant: #2C2C2C;
+      --color-border: #424242; --color-text-primary: #E0E0E0; --color-text-secondary: #BDBDBD; --color-text-muted: #757575;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--color-background); color: var(--color-text-primary); font-family: var(--font-family); min-height: 100vh; line-height: 1.6; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
+    main.page-container { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-lg); display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); flex: 1; align-content: start; }
+    @media (min-width: 960px) { main.page-container { grid-template-columns: 1fr 360px; } }
+    section.card { background: var(--color-surface); padding: var(--spacing-xl); border-radius: var(--border-radius); box-shadow: var(--shadow-md); border: 1px solid var(--color-border); transition: var(--transition); display: flex; flex-direction: column; animation: fadeIn 0.5s ease-out; }
+    .chat-card { flex: 1; min-height: 80vh; }
+    .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: var(--spacing-lg); display: flex; align-items: center; gap: var(--spacing-sm); }
+    .card-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border-radius: 2px; }
+    label { display: block; margin-bottom: var(--spacing-sm); font-weight: 500; font-size: 0.9rem; cursor: pointer; }
+    input, select, textarea { width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); font-family: var(--font-family); font-size: 0.95rem; background: var(--color-surface); color: var(--color-text-primary); transition: var(--transition); }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-primary); border-color: var(--color-primary); }
+    button { background: var(--color-primary); color: white; border: none; padding: 0 var(--spacing-lg); height: 44px; border-radius: var(--border-radius-sm); font-family: var(--font-family); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm); }
+    button:hover:not([disabled]) { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-outline { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-primary); }
+    .btn-outline:hover:not([disabled]) { background: var(--color-surface-variant); }
+    #thinkingIndicator { padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--border-radius-sm); margin-top: var(--spacing-md); font-family: var(--font-mono); font-size: 0.9em; color: var(--color-text-secondary); background: var(--color-surface-variant); border-left: 3px solid var(--color-primary); transition: all 0.3s; }
+    #chatMessagesContainer { flex: 1; min-height: 0; overflow-y: auto; padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+    .chat-initial-message { text-align: center; color: var(--color-text-secondary); margin: auto 0; padding: var(--spacing-lg); }
+    .chat-message { display: flex; max-width: 95%; animation: fadeIn 0.3s ease-out; }
+    .chat-message-content { padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--border-radius-sm); word-wrap: break-word; line-height: 1.5; position: relative; }
+    .chat-message.user { align-self: flex-end; }
+    .chat-message.user .chat-message-content { background: var(--color-primary); color: white; border-bottom-right-radius: 0; }
+    .chat-message.model, .chat-message.tool { align-self: flex-start; }
+    .chat-message.model .chat-message-content { background: var(--color-surface); border: 1px solid var(--color-border); border-bottom-left-radius: 0; }
+    .chat-message.tool .chat-message-content { background: var(--color-surface-variant); border: 1px dashed var(--color-border); font-family: var(--font-mono); font-size: 0.85em; color: var(--color-text-secondary); }
+    #chatForm { display: flex; align-items: flex-end; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+    #chatMessageInput { flex: 1; resize: none; overflow-y: hidden; padding-right: var(--spacing-md); line-height: 1.5; min-height: 44px; max-height: 200px; }
+    #sendChatMessageBtn, #stopGenerationBtn { border-radius: 50%; width: 44px; height: 44px; padding: 0; flex-shrink: 0; }
+    #stopGenerationBtn { background: var(--color-error); }
+    .hidden { display: none !important; }
+    .model-actions { position: absolute; bottom: 0; right: 0; padding: var(--spacing-sm); opacity: 0; transition: opacity 0.2s; background: var(--color-surface); border-radius: 0 var(--border-radius-sm) 0 0; }
+    .chat-message.model:hover .model-actions { opacity: 1; }
+    .action-btn { background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 0.2rem; height: auto; }
+    .action-btn:hover { color: var(--color-primary); }
+    .param-slider-group { display: flex; flex-direction: column; gap: var(--spacing-xs); margin-top: var(--spacing-md); }
+    .param-slider-group .label-value { display: flex; justify-content: space-between; font-size: 0.9em; }
+    .param-slider-group input[type="range"] { width: 100%; margin: 0; }
+    .dark-mode .toastify { background: #333; }
+    #historyBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; transition: opacity var(--transition); }
+    #historyPanel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; max-height: 80vh; background: var(--color-surface); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); z-index: 100; display: flex; flex-direction: column; transition: transform var(--transition), opacity var(--transition); }
+    #historyBackdrop.hidden, #historyPanel.hidden { opacity: 0; pointer-events: none; }
+    #historyPanel.hidden { transform: translate(-50%, -45%); }
+    .history-header { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md) var(--spacing-lg); border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+    .history-header h3 { margin: 0; }
+    #closeHistoryBtn { background: none; border: none; color: var(--color-text-primary); font-size: 1.5rem; line-height: 1; padding: var(--spacing-sm); height: auto; cursor: pointer; }
+    .history-search { padding: var(--spacing-md); border-bottom: 1px solid var(--color-border); }
+    .history-search input { width: 100%; }
+    #historyList { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md) var(--spacing-lg); border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background-color var(--transition); gap: var(--spacing-md); }
+    .history-item.active { background-color: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+    .history-item:hover:not(.active) { background-color: var(--color-surface-variant); }
+    .history-item-info { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .history-item-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+    .history-item-meta { font-size: 0.8em; color: var(--color-text-secondary); }
+    .history-item-actions { display: flex; gap: var(--spacing-sm); }
+    .history-item-actions .action-btn { color: var(--color-text-muted); }
+    .history-item-actions .action-btn:hover { color: var(--color-primary); }
+    .history-item-actions .delete-history-btn:hover { color: var(--color-error); }
+    .tabs { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: var(--spacing-lg); }
+    .tab-button { padding: var(--spacing-sm) var(--spacing-md); border: none; background: none; cursor: pointer; font-size: 0.95rem; color: var(--color-text-secondary); border-bottom: 2px solid transparent; }
+    .tab-button.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+    .form-group-inline { display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-md); }
+    .form-group-inline input[type="checkbox"] { width: auto; }
+    
+    /* --- GARANTIA DE FUNCIONAMENTO DO SCROLL --- */
+
+/* 1. O corpo da página precisa ser um container flex vertical para ocupar a tela inteira */
+body { 
+  background: var(--color-background); 
+  color: var(--color-text-primary); 
+  font-family: var(--font-family); 
+  min-height: 100vh; /* Garante que o body ocupe no mínimo a altura da tela */
+  line-height: 1.6; 
+  display: flex; /* Essencial */
+  flex-direction: column; /* Essencial */
+  transition: background 0.2s, color 0.2s; 
+}
+
+/* 2. O card do chat precisa ser um container flex vertical e se expandir */
+section.card.chat-card {
+  background: var(--color-surface);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  transition: var(--transition);
+  display: flex; /* Essencial */
+  flex-direction: column; /* Essencial */
+  animation: fadeIn 0.5s ease-out;
+  flex: 1; /* Faz o card se expandir para preencher o espaço vertical da <main> */
+  min-height: 0; /* Previne problemas de overflow do flexbox em alguns navegadores */
+}
+
+/* 3. A área das mensagens (o seu alvo) */
+#chatMessagesContainer {
+  flex: 1; /* ESSENCIAL: Diz para ele crescer e ocupar todo o espaço vertical livre dentro do .chat-card */
+  min-height: 0; /* TRUQUE IMPORTANTE: Previne que o container tente ser maior que o pai */
+  overflow-y: auto; /* A MÁGICA: Adiciona o scroll vertical APENAS quando o conteúdo transbordar */
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+  </style>
+</head>
+<body>
+  <template id="chat-message-template"><div class="chat-message"><div class="chat-message-content"></div></div></template>
+  <template id="model-actions-template"><div class="model-actions"><button class="action-btn regenerate-btn" title="Regenerar resposta" aria-label="Regenerar resposta"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg></button></div></template>
+
+  <main class="page-container">
+    <section class="card chat-card">
+      <h2 class="card-title">🚀 Chat</h2>
+      <div id="chatMessagesContainer"><div class="chat-initial-message">Carregando modelos...</div></div>
+      <div id="thinkingIndicator" class="hidden"></div>
+      <form id="chatForm">
+        <textarea id="chatMessageInput" placeholder="Aguarde..." rows="1" disabled></textarea>
+        <button type="submit" id="sendChatMessageBtn" title="Enviar Mensagem" aria-label="Enviar Mensagem" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        <button type="button" id="stopGenerationBtn" title="Parar Geração" aria-label="Parar Geração" class="hidden"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg></button>
+      </form>
+    </section>
+
+    <div id="settings-column" style="display:flex; flex-direction: column; gap: var(--spacing-lg);">
+      <section class="card">
+        <div class="tabs">
+          <button class="tab-button active" data-tab="general-settings">Geral</button>
+          <button class="tab-button" data-tab="advanced-settings">Avançado</button>
+        </div>
+        
+        <div id="general-settings" class="tab-content active">
+          <h3 style="margin-bottom: var(--spacing-md);">Configurações Gerais</h3>
+          <div><label for="modelSelector">Modelo Ollama:</label><select id="modelSelector"></select></div>
+          <div style="display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; margin-top: var(--spacing-lg);">
+            <button type="button" id="historyBtn" class="btn-outline" aria-label="Ver histórico de conversas">📚 Histórico</button>
+            <button type="button" id="toggleDarkModeBtn" class="btn-outline" aria-label="Alternar modo claro/escuro">Modo Escuro</button>
+            <button type="button" id="newChatBtn" class="btn-outline" style="margin-left: auto;" aria-label="Iniciar novo chat">➕ Novo Chat</button>
+          </div>
+        </div>
+
+        <div id="advanced-settings" class="tab-content">
+          <h3 style="margin-bottom: var(--spacing-md);">Chat Ativo</h3>
+          <div class="form-group-inline"><input type="checkbox" id="activateSystemPrompt"><label for="activateSystemPrompt">Usar Prompt de Sistema</label></div>
+          <textarea id="systemPromptText" placeholder="Prompt de sistema para o chat atual..." rows="3" disabled></textarea>
+          <div class="param-slider-group"><div class="label-value"><label for="temperatureSlider">Temperatura</label><span id="temperatureValue">0.80</span></div><input type="range" id="temperatureSlider" min="0" max="2" step="0.05"></div>
+          <div class="param-slider-group"><div class="label-value"><label for="topPSlider">Top P</label><span id="topPValue">0.90</span></div><input type="range" id="topPSlider" min="0" max="1" step="0.05"></div>
+          <div class="param-slider-group"><div class="label-value"><label for="topKSlider">Top K</label><span id="topKValue">40</span></div><input type="range" id="topKSlider" min="0" max="100" step="1"></div>
+          <hr style="border: none; border-top: 1px solid var(--color-border); margin: var(--spacing-lg) 0 var(--spacing-md) 0;">
+          <div class="form-group-inline"><input type="checkbox" id="useThinkMode"><label for="useThinkMode">Ativar Thinking</label></div>
+          <div class="form-group-inline"><input type="checkbox" id="activateToolCalling"><label for="activateToolCalling">Ativar Ferramenta de Pesquisa</label></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  
+  <div id="historyBackdrop" class="hidden"></div>
+  <div id="historyPanel" class="hidden">
+    <div class="history-header"><h3>Histórico de Conversas</h3><button id="closeHistoryBtn" title="Fechar" aria-label="Fechar painel de histórico">×</button></div>
+    <div class="history-search"><input type="search" id="historySearchInput" placeholder="Pesquisar chats..."></div>
+    <ul id="historyList"></ul>
+  </div>
+
+  <script>
+    // --- ATENÇÃO! ---
+    // Para usar a ferramenta de pesquisa, você precisa de uma chave de API da Tavily.
+    // 1. Obtenha sua chave gratuita em: https://tavily.com
+    // 2. Substitua "COLE_SUA_CHAVE_AQUI" pela sua chave.
+    const TAVILY_API_KEY = "COLE_SUA_CHAVE_AQUI"; 
+    
+    const CONSTANTS = { CONFIG_KEY: 'ollamaChatProConfig_v13', CHATS_KEY: 'ollamaChatHistory_all', ACTIVE_CHAT_ID_KEY: 'ollamaActiveChatId' };
+    const searchToolSchema = { type: 'function', function: { name: 'search_the_web', description: 'Use this tool to search the web for recent information, facts, or data that you do not know. Provides a concise answer to a user query.', parameters: { type: 'object', required: ['query'], properties: { query: { type: 'string', description: 'The precise and targeted search query to find the answer to the user\'s question.' } } } } };
+
+    const OllamaChatApp = {
+      config: { ollamaHost: 'http://localhost:11434', darkMode: false },
+      state: { isLoading: false, currentModel: '', activeChatId: null, messages: [], chatSettings: {}, promptHistory: [], promptHistoryIndex: -1 },
+      elements: {}, apiClient: null, tools: {},
+
+      init() {
+        this.cacheElements();
+        this.apiClient = this.ApiClient(this.config.ollamaHost);
+        this.loadConfig();
+        this.applyConfig();
+        this.defineTools();
+        this.fetchModels().then(() => this.bindEvents());
+      },
+
+      cacheElements() {
+        this.elements = {
+          body: document.body, chatMessagesContainer: document.getElementById('chatMessagesContainer'), chatForm: document.getElementById('chatForm'), chatMessageInput: document.getElementById('chatMessageInput'), sendChatMessageBtn: document.getElementById('sendChatMessageBtn'), stopGenerationBtn: document.getElementById('stopGenerationBtn'), newChatBtn: document.getElementById('newChatBtn'), modelSelector: document.getElementById('modelSelector'), toggleDarkModeBtn: document.getElementById('toggleDarkModeBtn'), historyBtn: document.getElementById('historyBtn'), historyPanel: document.getElementById('historyPanel'), historyBackdrop: document.getElementById('historyBackdrop'), historyList: document.getElementById('historyList'), closeHistoryBtn: document.getElementById('closeHistoryBtn'), historySearchInput: document.getElementById('historySearchInput'), thinkingIndicator: document.getElementById('thinkingIndicator'),
+          tabsContainer: document.querySelector('.tabs'), tabContents: document.querySelectorAll('.tab-content'),
+          activateSystemPrompt: document.getElementById('activateSystemPrompt'), systemPromptText: document.getElementById('systemPromptText'), useThinkMode: document.getElementById('useThinkMode'), activateToolCalling: document.getElementById('activateToolCalling'), temperatureSlider: document.getElementById('temperatureSlider'), temperatureValue: document.getElementById('temperatureValue'), topPSlider: document.getElementById('topPSlider'), topPValue: document.getElementById('topPValue'), topKSlider: document.getElementById('topKSlider'), topKValue: document.getElementById('topKValue'),
+          templates: { message: document.getElementById('chat-message-template'), modelActions: document.getElementById('model-actions-template'), }
+        };
+      },
+      
+      defineTools() { this.tools = { search_the_web: async ({ query }) => { this.ui.showToast(`🔎 Pesquisando: "${query}"`, 'info'); if (!TAVILY_API_KEY || TAVILY_API_KEY === "COLE_SUA_CHAVE_AQUI") { this.ui.showToast('Chave da API Tavily não configurada.', 'warning'); return JSON.stringify({ result: "Busca simulada: A chave da API Tavily não foi configurada. Esta é uma resposta de exemplo." }); } try { const response = await fetch('https://api.tavily.com/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_key: TAVILY_API_KEY, query: query, search_depth: 'basic' }) }); if (!response.ok) throw new Error(`Tavily API error: ${response.statusText}`); const data = await response.json(); return JSON.stringify(data.results.length > 0 ? data.results : { result: "Nenhum resultado encontrado." }); } catch (error) { console.error("Erro na busca da Tavily:", error); return JSON.stringify({ error: error.message }); } } }; },
+      loadConfig() { try { const savedConfig = localStorage.getItem(CONSTANTS.CONFIG_KEY); if (savedConfig) Object.assign(this.config, JSON.parse(savedConfig)); } catch (e) { console.warn("Falha ao carregar configuração.", e); } },
+      saveConfig() { try { localStorage.setItem(CONSTANTS.CONFIG_KEY, JSON.stringify(this.config)); } catch (e) { console.warn("Falha ao salvar configuração.", e); } },
+      
+      applyConfig() { this.elements.body.classList.toggle('dark-mode', this.config.darkMode); this.elements.toggleDarkModeBtn.textContent = this.config.darkMode ? '☀️ Modo Claro' : '🌒 Modo Escuro'; },
+
+      bindEvents() {
+        this.elements.chatForm.addEventListener('submit', this.handlers.sendMessage.bind(this));
+        this.elements.newChatBtn.addEventListener('click', () => this.handlers.newChat(true));
+        this.elements.stopGenerationBtn.addEventListener('click', () => this.apiClient.abort());
+        this.elements.modelSelector.addEventListener('change', this.handlers.modelChange.bind(this));
+        this.elements.chatMessageInput.addEventListener('keydown', this.handlers.promptHistory.bind(this));
+        this.elements.chatMessageInput.addEventListener('input', this.handlers.resizeInput);
+        this.elements.chatMessagesContainer.addEventListener('click', this.handlers.containerClick.bind(this));
+        this.elements.toggleDarkModeBtn.addEventListener('click', () => { this.config.darkMode = !this.config.darkMode; this.saveConfig(); this.applyConfig(); });
+        this.elements.historyBtn.addEventListener('click', this.handlers.toggleHistory.bind(this));
+        this.elements.closeHistoryBtn.addEventListener('click', this.ui.hideHistoryPanel.bind(this.ui));
+        this.elements.historyBackdrop.addEventListener('click', this.ui.hideHistoryPanel.bind(this.ui));
+        this.elements.historyList.addEventListener('click', this.handlers.historyListClick.bind(this));
+        this.elements.historySearchInput.addEventListener('input', () => this.ui.showHistoryPanel());
+        this.elements.tabsContainer.addEventListener('click', this.handlers.handleTabClick.bind(this));
+        
+        // Vincula eventos para as configurações avançadas do chat de forma dinâmica.
+        const advancedSettings = { 'activateSystemPrompt': 'useSystemPrompt', 'useThinkMode': 'useThinkMode', 'activateToolCalling': 'useToolCalling' };
+        for (const [id, key] of Object.entries(advancedSettings)) { this.elements[id].addEventListener('change', e => { this.state.chatSettings[key] = e.target.checked; this.persistence.saveCurrentChat(); this.ui.applyChatSettingsToUI(); }); }
+        this.elements.systemPromptText.addEventListener('input', e => { this.state.chatSettings.systemPrompt = e.target.value; this.persistence.saveCurrentChat(); });
+        
+        // Vincula eventos para os sliders de parâmetros.
+        ['temperature', 'top_p', 'top_k'].forEach(param => {
+          const p = param.replace('_',''); const slider = this.elements[`${p}Slider`]; const valueDisplay = this.elements[`${p}Value`];
+          if(slider && valueDisplay){
+            slider.addEventListener('input', e => { valueDisplay.textContent = parseFloat(e.target.value).toFixed(param === 'top_k' ? 0 : 2); });
+            slider.addEventListener('change', e => { this.state.chatSettings[param] = parseFloat(e.target.value); this.persistence.saveCurrentChat(); });
+          }
+        });
+      },
+
+      ApiClient(baseURL) { let controller; return { abort: () => controller?.abort(), stream: async (endpoint, payload, callbacks) => { controller = new AbortController(); try { const response = await fetch(`${baseURL}${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal, }); if (!response.ok || !response.body) { const errorText = await response.text(); throw new Error(`API Error: ${response.status} - ${errorText}`); } const reader = response.body.getReader(); const decoder = new TextDecoder(); while (true) { const { value, done } = await reader.read(); if (done) break; const chunk = decoder.decode(value); const lines = chunk.split('\n').filter(line => line.trim() !== ''); for (const line of lines) { try { const json = JSON.parse(line); callbacks.onChunk(json); } catch (e) { console.warn("Falha ao parsear chunk do stream:", e, line); } } } callbacks.onComplete(); } catch (err) { if (err.name !== 'AbortError') callbacks.onError(err); else callbacks.onComplete(); } finally { controller = null; } } } },
+      
+      async fetchModels() { this.ui.setLoading(true); try { const response = await fetch(`${this.config.ollamaHost}/api/tags`); if (!response.ok) throw new Error(`HTTP error ${response.status}`); const data = await response.json(); this.ui.populateModels(data.models); } catch (error) { console.error("Falha ao buscar modelos Ollama:", error); this.ui.populateModels([]); this.ui.showToast('Falha ao conectar ao Ollama. Verifique se o servidor está rodando.', 'error'); this.elements.chatMessagesContainer.innerHTML = `<div class="chat-initial-message">❌ Falha ao conectar ao Ollama.<br>Verifique se o serviço está rodando em <code>${this.config.ollamaHost}</code> e atualize a página.</div>`; } },
+      
+      async submitChat(isRegeneration = false, messagesOverride = null) {
+        const messagesToSubmit = messagesOverride || (isRegeneration ? this.state.messages.slice(0, -1) : [...this.state.messages]);
+        if (messagesToSubmit.length === 0) return;
+        this.ui.setLoading(true); this.ui.showThinkingIndicator(this.state.chatSettings.useThinkMode);
+        const aiMessage = { role: 'model', content: '', tool_calls: [], thinking: '' };
+        if (!isRegeneration && !messagesOverride) this.state.messages.push(aiMessage); else if(isRegeneration) this.state.messages[this.state.messages.length - 1] = aiMessage;
+        let messageElement = document.querySelector('.chat-message:last-child');
+        if (!isRegeneration || !messageElement?.classList.contains('model')) { messageElement = this.ui.renderMessage(aiMessage, true); }
+        const contentDiv = messageElement.querySelector('.chat-message-content');
+        const payload = this.buildPayload(messagesToSubmit);
+        await this.apiClient.stream('/api/chat', payload, {
+          onChunk: (json) => { const msg = json.message; if (msg?.thinking) { aiMessage.thinking += msg.thinking; this.ui.updateThinkingIndicator(aiMessage.thinking); } if (msg?.content) { if (this.state.chatSettings.useThinkMode) this.ui.showThinkingIndicator(false); aiMessage.content += msg.content; this.ui.updateStreamedMessage(contentDiv, aiMessage.content); } if (msg?.tool_calls) { aiMessage.tool_calls = (aiMessage.tool_calls || []).concat(msg.tool_calls); } },
+          onComplete: () => { this.ui.finalizeMessage(contentDiv, aiMessage.content); this.persistence.saveCurrentChat(); if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) { this.handlers.handleToolCalls(aiMessage.tool_calls); } else { this.ui.setLoading(false); } },
+          onError: (err) => { this.ui.showToast(`Erro na API: ${err.message}`, 'error'); this.ui.setLoading(false); if (this.state.messages.at(-1)?.role === 'model' && this.state.messages.at(-1)?.content === '') this.state.messages.pop(); this.ui.renderAllMessages(); }
+        });
+      },
+      
+      buildPayload(messages) {
+        const { chatSettings } = this.state; const payload = { model: this.state.currentModel, messages: messages.map(msg => ({ role: msg.role, content: msg.content, tool_calls: msg.tool_calls })), stream: true, think: chatSettings.useThinkMode, options: { temperature: chatSettings.temperature, top_p: chatSettings.top_p, top_k: chatSettings.top_k } };
+        if (chatSettings.useToolCalling) payload.tools = [searchToolSchema]; if (chatSettings.useSystemPrompt && chatSettings.systemPrompt) payload.messages.unshift({ role: 'system', content: chatSettings.systemPrompt });
+        return payload;
+      },
+      
+            persistence: {
+        getAllChats() { try { return JSON.parse(localStorage.getItem(CONSTANTS.CHATS_KEY)) || {}; } catch (e) { return {}; } },
+        saveAllChats(chats) { try { localStorage.setItem(CONSTANTS.CHATS_KEY, JSON.stringify(chats)); } catch (e) { console.error("Erro ao salvar chats.", e); } },
+        saveCurrentChat() { 
+          if(!OllamaChatApp.state.activeChatId) return; 
+          const allChats = this.getAllChats(); 
+          allChats[OllamaChatApp.state.activeChatId] = { id: OllamaChatApp.state.activeChatId, title: allChats[OllamaChatApp.state.activeChatId]?.title || OllamaChatApp.state.messages[0]?.content || "Novo Chat", model: OllamaChatApp.state.currentModel, timestamp: allChats[OllamaChatApp.state.activeChatId]?.timestamp || Date.now(), messages: OllamaChatApp.state.messages, settings: OllamaChatApp.state.chatSettings }; 
+          this.saveAllChats(allChats); 
+        },
+        loadChat(chatId) { 
+          const allChats = this.getAllChats(); 
+          const chat = allChats[chatId]; 
+          if (chat) { 
+            OllamaChatApp.state.activeChatId = chatId; 
+            OllamaChatApp.state.messages = chat.messages || []; 
+            OllamaChatApp.state.currentModel = chat.model; 
+            OllamaChatApp.state.chatSettings = chat.settings || OllamaChatApp.handlers.getDefaultChatSettings(); 
+            localStorage.setItem(CONSTANTS.ACTIVE_CHAT_ID_KEY, chatId); 
+            if(OllamaChatApp.elements.modelSelector) OllamaChatApp.elements.modelSelector.value = chat.model; 
+            return true; 
+          } 
+          return false; 
+        },
+        deleteChat(chatId) { 
+          const allChats = this.getAllChats(); 
+          delete allChats[chatId]; 
+          this.saveAllChats(allChats); 
+          if (OllamaChatApp.state.activeChatId === chatId) { 
+            const remainingChats = Object.values(allChats).sort((a,b) => b.timestamp - a.timestamp); 
+            if(remainingChats.length > 0) { 
+              this.loadChat(remainingChats[0].id); 
+            } else { 
+              OllamaChatApp.handlers.newChat(false); // Corrigido para chamar o handler corretamente
+            } 
+          } 
+        },
+        renameChat(chatId, newTitle) { 
+          const allChats = this.getAllChats(); 
+          if (allChats[chatId]) { 
+            allChats[chatId].title = newTitle; 
+            this.saveAllChats(allChats); 
+          } 
+        },
+        // --- ALTERAÇÃO PRINCIPAL AQUI ---
+        init() { 
+          let activeId = localStorage.getItem(CONSTANTS.ACTIVE_CHAT_ID_KEY); 
+          // Usamos 'this.loadChat' aqui, o que está correto pois 'this' é 'persistence'.
+          if (!activeId || !this.loadChat(activeId)) { 
+            // A chamada para newChat deve ser feita através do handler, não 'this'.
+            OllamaChatApp.handlers.newChat(false); 
+          } 
+        }
+      },
+      
+            handlers: {
+        getDefaultChatSettings() { return { systemPrompt: '', useSystemPrompt: false, useThinkMode: false, useToolCalling: true, temperature: 0.8, top_p: 0.9, top_k: 40 }; },
+        sendMessage(event) {
+          event.preventDefault();
+          const inputText = OllamaChatApp.elements.chatMessageInput.value.trim();
+          if (!inputText || OllamaChatApp.state.isLoading || !OllamaChatApp.state.currentModel) return;
+          if (OllamaChatApp.state.messages.length === 0) {
+            const allChats = OllamaChatApp.persistence.getAllChats();
+            if (allChats[OllamaChatApp.state.activeChatId]) {
+              allChats[OllamaChatApp.state.activeChatId].title = inputText;
+              OllamaChatApp.persistence.saveAllChats(allChats);
+            }
+          }
+          OllamaChatApp.state.promptHistory.unshift(inputText);
+          OllamaChatApp.state.promptHistory = [...new Set(OllamaChatApp.state.promptHistory)];
+          if (OllamaChatApp.state.promptHistory.length > 50) OllamaChatApp.state.promptHistory.pop();
+          OllamaChatApp.state.promptHistoryIndex = -1;
+          const userMessage = { role: 'user', content: inputText };
+          OllamaChatApp.state.messages.push(userMessage);
+          OllamaChatApp.ui.renderMessage(userMessage);
+          OllamaChatApp.persistence.saveCurrentChat();
+          OllamaChatApp.elements.chatMessageInput.value = '';
+          OllamaChatApp.handlers.resizeInput(); // Chamar através do objeto principal
+          OllamaChatApp.submitChat();
+        },
+        async handleToolCalls(toolCalls) {
+          const newMessages = [...OllamaChatApp.state.messages];
+          newMessages.at(-1).tool_calls = toolCalls;
+          for (const toolCall of toolCalls) {
+            const functionName = toolCall.function.name;
+            const functionArgs = toolCall.function.arguments;
+            if (OllamaChatApp.tools[functionName]) {
+              const result = await OllamaChatApp.tools[functionName](functionArgs);
+              newMessages.push({ role: 'tool', content: result, tool_call_id: toolCall.id });
+            }
+          }
+          OllamaChatApp.ui.renderAllMessages(newMessages.slice(OllamaChatApp.state.messages.length));
+          OllamaChatApp.state.messages = newMessages;
+          OllamaChatApp.persistence.saveCurrentChat();
+          OllamaChatApp.submitChat(false, OllamaChatApp.state.messages);
+        },
+        newChat(showToast = true) {
+          const newChatId = `chat_${Date.now()}`;
+          OllamaChatApp.state.activeChatId = newChatId; // Agora 'OllamaChatApp.state' está definido
+          OllamaChatApp.state.messages = [];
+          const lastChatId = localStorage.getItem(CONSTANTS.ACTIVE_CHAT_ID_KEY);
+          OllamaChatApp.state.chatSettings = { ...(OllamaChatApp.persistence.getAllChats()[lastChatId]?.settings || OllamaChatApp.handlers.getDefaultChatSettings()) };
+          OllamaChatApp.persistence.saveCurrentChat();
+          localStorage.setItem(CONSTANTS.ACTIVE_CHAT_ID_KEY, newChatId);
+          OllamaChatApp.ui.renderAllMessages();
+          OllamaChatApp.ui.applyChatSettingsToUI();
+          if (showToast) OllamaChatApp.ui.showToast('Novo chat iniciado!', 'success');
+        },
+        modelChange(e) {
+          if (OllamaChatApp.state.currentModel === e.target.value) return;
+          if (OllamaChatApp.state.messages.length > 0 && !confirm("Trocar de modelo irá iniciar um novo chat. Deseja continuar?")) {
+            OllamaChatApp.elements.modelSelector.value = OllamaChatApp.state.currentModel;
+            return;
+          }
+          OllamaChatApp.state.currentModel = e.target.value;
+          OllamaChatApp.handlers.newChat(false); // Chamar através do objeto principal
+        },
+        resizeInput(e) {
+          const el = e?.target || OllamaChatApp.elements.chatMessageInput;
+          el.style.height = 'auto';
+          el.style.height = `${el.scrollHeight}px`;
+        },
+        containerClick(event) {
+          const regenerateButton = event.target.closest('.regenerate-btn');
+          if (regenerateButton) {
+            if (!OllamaChatApp.state.isLoading) OllamaChatApp.submitChat(true);
+          }
+        },
+        promptHistory(e) {
+          const { chatMessageInput } = OllamaChatApp.elements;
+          const { promptHistory } = OllamaChatApp.state;
+          if (promptHistory.length === 0) return;
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (OllamaChatApp.state.promptHistoryIndex < promptHistory.length - 1) {
+              OllamaChatApp.state.promptHistoryIndex++;
+              chatMessageInput.value = promptHistory[OllamaChatApp.state.promptHistoryIndex];
+            }
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (OllamaChatApp.state.promptHistoryIndex > 0) {
+              OllamaChatApp.state.promptHistoryIndex--;
+              chatMessageInput.value = promptHistory[OllamaChatApp.state.promptHistoryIndex];
+            } else {
+              OllamaChatApp.state.promptHistoryIndex = -1;
+              chatMessageInput.value = "";
+            }
+          } else {
+            OllamaChatApp.state.promptHistoryIndex = -1;
+          }
+          chatMessageInput.selectionStart = chatMessageInput.selectionEnd = chatMessageInput.value.length;
+          OllamaChatApp.handlers.resizeInput({ target: chatMessageInput }); // Chamar através do objeto principal
+        },
+        toggleHistory() {
+          OllamaChatApp.ui.showHistoryPanel();
+        },
+        historyListClick(e) {
+          const target = e.target;
+          const item = target.closest('.history-item');
+          if (!item) return;
+          const actions = {
+            'delete-history-btn': (chatId) => {
+              if (confirm("Tem certeza que deseja apagar esta conversa permanentemente?")) {
+                OllamaChatApp.persistence.deleteChat(chatId);
+                OllamaChatApp.ui.showHistoryPanel();
+                OllamaChatApp.ui.renderAllMessages();
+                OllamaChatApp.ui.applyChatSettingsToUI();
+                OllamaChatApp.ui.showToast('Conversa apagada.', 'info');
+              }
+            },
+            'rename-history-btn': (chatId) => {
+              const currentTitle = OllamaChatApp.persistence.getAllChats()[chatId]?.title || '';
+              const newTitle = prompt("Digite o novo nome para a conversa:", currentTitle);
+              if (newTitle && newTitle.trim() !== '') {
+                OllamaChatApp.persistence.renameChat(chatId, DOMPurify.sanitize(newTitle.trim()));
+                OllamaChatApp.ui.showHistoryPanel();
+                OllamaChatApp.ui.showToast('Conversa renomeada.', 'success');
+              }
+            },
+            'export-history-btn': (chatId) => {
+              OllamaChatApp.handlers.exportChat(chatId);
+            }
+          };
+          for (const [className, action] of Object.entries(actions)) {
+            if (target.closest(`.${className}`)) {
+              e.stopPropagation();
+              action(item.dataset.chatId);
+              return;
+            }
+          }
+          OllamaChatApp.persistence.loadChat(item.dataset.chatId);
+          OllamaChatApp.ui.renderAllMessages();
+          OllamaChatApp.ui.applyChatSettingsToUI();
+          OllamaChatApp.ui.hideHistoryPanel();
+          OllamaChatApp.ui.showToast('Conversa carregada.', 'success');
+        },
+        exportChat(chatId) {
+          const chat = OllamaChatApp.persistence.getAllChats()[chatId];
+          if (!chat) return;
+          let markdownContent = `# Chat com ${chat.model}\n\nTítulo: ${chat.title}\nData: ${new Date(chat.timestamp).toLocaleString()}\n\n---\n\n`;
+          chat.messages.forEach(msg => {
+            if (msg.role === 'tool') return;
+            const prefix = msg.role === 'user' ? '👤 **Usuário**' : '🤖 **Assistente**';
+            markdownContent += `${prefix}:\n\n${msg.content}\n\n---\n\n`;
+          });
+          const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${chat.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          OllamaChatApp.ui.showToast('Chat exportado!', 'success');
+        },
+        handleTabClick(e) {
+          if (e.target.classList.contains('tab-button')) {
+            const tabId = e.target.dataset.tab;
+            OllamaChatApp.elements.tabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            OllamaChatApp.elements.tabContents.forEach(content => content.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+          }
+        }
+      },
+
+      ui: {
+        setLoading(isLoading) { const { chatMessageInput, sendChatMessageBtn, stopGenerationBtn, newChatBtn, modelSelector } = OllamaChatApp.elements; const hasModel = !!OllamaChatApp.state.currentModel; OllamaChatApp.state.isLoading = isLoading; chatMessageInput.disabled = isLoading || !hasModel; modelSelector.disabled = isLoading; newChatBtn.disabled = isLoading; sendChatMessageBtn.classList.toggle('hidden', isLoading); sendChatMessageBtn.disabled = isLoading || !hasModel; stopGenerationBtn.classList.toggle('hidden', !isLoading); if (!isLoading && hasModel) { chatMessageInput.placeholder = 'Digite sua mensagem...'; chatMessageInput.focus(); } else if (!hasModel) { chatMessageInput.placeholder = 'Selecione um modelo para começar.'; } else { chatMessageInput.placeholder = 'Aguarde...'; } this.updateActionButtonsVisibility(); if(!isLoading) this.showThinkingIndicator(false); },
+        showThinkingIndicator(show) { const { thinkingIndicator } = OllamaChatApp.elements; thinkingIndicator.classList.toggle('hidden', !show); if(show) thinkingIndicator.innerHTML = 'Pensando...'; },
+        updateThinkingIndicator(text) { OllamaChatApp.elements.thinkingIndicator.innerHTML = DOMPurify.sanitize(marked.parse(text)); },
+        populateModels(models) { const { modelSelector } = OllamaChatApp.elements; modelSelector.innerHTML = ''; if (models.length === 0) { modelSelector.innerHTML = '<option value="">Nenhum modelo disponível</option>'; OllamaChatApp.state.currentModel = ''; this.setLoading(false); } else { models.forEach(model => { const option = document.createElement('option'); option.value = model.name; option.textContent = model.name; modelSelector.appendChild(option); }); const lastChatId = localStorage.getItem(CONSTANTS.ACTIVE_CHAT_ID_KEY); const lastUsedModel = OllamaChatApp.persistence.getAllChats()[lastChatId]?.model; OllamaChatApp.state.currentModel = models.some(m => m.name === lastUsedModel) ? lastUsedModel : models[0].name; modelSelector.value = OllamaChatApp.state.currentModel; } OllamaChatApp.persistence.init(); OllamaChatApp.ui.renderAllMessages(); this.setLoading(false); },
+        renderAllMessages(newMessagesOnly = null) { const { chatMessagesContainer } = OllamaChatApp.elements; if (!newMessagesOnly) chatMessagesContainer.innerHTML = ''; const messagesToRender = newMessagesOnly || OllamaChatApp.state.messages; if(chatMessagesContainer.innerHTML === '' && messagesToRender.length === 0) { document.querySelector('.chat-initial-message')?.remove(); chatMessagesContainer.innerHTML = `<div class="chat-initial-message">Como posso ajudar hoje?</div>`; } else { document.querySelector('.chat-initial-message')?.remove(); messagesToRender.forEach(msg => this.renderMessage(msg)); } this.updateActionButtonsVisibility(); },
+        renderMessage(message, isStreaming = false) { const { message: tpl, modelActions: actionsTpl } = OllamaChatApp.elements.templates; const { chatMessagesContainer } = OllamaChatApp.elements; document.querySelector('.chat-initial-message')?.remove(); const messageClone = tpl.content.cloneNode(true); const messageDiv = messageClone.querySelector('.chat-message'); const contentDiv = messageClone.querySelector('.chat-message-content'); messageDiv.classList.add(message.role); if (message.role === 'model') { contentDiv.appendChild(actionsTpl.content.cloneNode(true)); } const content = message.content || (isStreaming ? '' : '...'); this.finalizeMessage(contentDiv, content, isStreaming); const wasScrolledToBottom = Math.abs(chatMessagesContainer.scrollHeight - chatMessagesContainer.clientHeight - chatMessagesContainer.scrollTop) < 5; chatMessagesContainer.appendChild(messageClone); if (wasScrolledToBottom) chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; this.updateActionButtonsVisibility(); return messageDiv; },
+        updateStreamedMessage(contentDiv, fullContent) { this.finalizeMessage(contentDiv, fullContent, true); const { chatMessagesContainer } = OllamaChatApp.elements; const wasScrolledToBottom = Math.abs(chatMessagesContainer.scrollHeight - chatMessagesContainer.clientHeight - chatMessagesContainer.scrollTop) < 20; if (wasScrolledToBottom) chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; },
+        finalizeMessage(contentDiv, fullContent, isStreaming = false) { const actions = contentDiv.querySelector('.model-actions'); const cursor = isStreaming ? '<span class="cursor-animation">▍</span>' : ''; const sanitizedHtml = DOMPurify.sanitize(marked.parse(fullContent + cursor)); contentDiv.innerHTML = sanitizedHtml; if(actions) contentDiv.appendChild(actions); if (!isStreaming) { contentDiv.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el)); this.updateActionButtonsVisibility(); } },
+        updateActionButtonsVisibility() { const allModelMessages = document.querySelectorAll('.chat-message.model'); allModelMessages.forEach((msg, index) => { const actions = msg.querySelector('.model-actions'); if (actions) { const isLastMessage = index === allModelMessages.length - 1; const isNotLoading = !OllamaChatApp.state.isLoading; actions.classList.toggle('hidden', !isLastMessage || !isNotLoading); } }); },
+        showToast(message, type = 'info') { const colorMap = { success: 'var(--color-success)', error: 'var(--color-error)', warning: 'var(--color-warning)', info: 'var(--color-secondary)' }; Toastify({ text: message, duration: 3000, newWindow: true, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: colorMap[type] || 'var(--color-primary)' } }).showToast(); },
+        showHistoryPanel() { const { historyList, historyPanel, historyBackdrop, historySearchInput } = OllamaChatApp.elements; historyList.innerHTML = ''; const allChats = OllamaChatApp.persistence.getAllChats(); const searchTerm = historySearchInput.value.toLowerCase(); const filteredChats = Object.values(allChats).filter(chat => (chat.title && chat.title.toLowerCase().includes(searchTerm)) || (chat.messages && chat.messages.some(m => m.content && m.content.toLowerCase().includes(searchTerm)))); const sortedChats = filteredChats.sort((a,b) => b.timestamp - a.timestamp); if (sortedChats.length === 0) { historyList.innerHTML = '<li class="history-item" style="cursor:default;">Nenhum resultado encontrado.</li>'; } else { sortedChats.forEach(chat => { const item = document.createElement('li'); item.className = 'history-item'; if(chat.id === OllamaChatApp.state.activeChatId) item.classList.add('active'); item.dataset.chatId = chat.id; item.innerHTML = `<div class="history-item-info"><div class="history-item-title">${DOMPurify.sanitize(chat.title)}</div><div class="history-item-meta">${chat.messages?.length || 0} mensagens • ${new Date(chat.timestamp).toLocaleDateString()}</div></div><div class="history-item-actions"><button class="action-btn rename-history-btn" title="Renomear" aria-label="Renomear conversa"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button><button class="action-btn export-history-btn" title="Exportar para Markdown" aria-label="Exportar conversa"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="action-btn delete-history-btn" title="Apagar" aria-label="Apagar conversa"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button></div>`; historyList.appendChild(item); }); } historyPanel.classList.remove('hidden'); historyBackdrop.classList.remove('hidden'); },
+        hideHistoryPanel() { OllamaChatApp.elements.historyPanel.classList.add('hidden'); OllamaChatApp.elements.historyBackdrop.classList.add('hidden'); },
+        applyChatSettingsToUI() {
+          const { chatSettings } = OllamaChatApp.state; const { activateSystemPrompt, systemPromptText, useThinkMode, activateToolCalling, temperatureSlider, temperatureValue, topPSlider, topPValue, topKSlider, topKValue } = OllamaChatApp.elements;
+          const settings = chatSettings || OllamaChatApp.handlers.getDefaultChatSettings();
+          activateSystemPrompt.checked = settings.useSystemPrompt; systemPromptText.value = settings.systemPrompt || ''; systemPromptText.disabled = !settings.useSystemPrompt;
+          useThinkMode.checked = settings.useThinkMode; activateToolCalling.checked = settings.useToolCalling;
+          temperatureSlider.value = settings.temperature; temperatureValue.textContent = parseFloat(settings.temperature).toFixed(2);
+          topPSlider.value = settings.top_p; topPValue.textContent = parseFloat(settings.top_p).toFixed(2);
+          topKSlider.value = settings.top_k; topKValue.textContent = settings.top_k;
+        }
+      },
+    };
+
+    document.addEventListener('DOMContentLoaded', () => OllamaChatApp.init());
+  </script>
+</body>
+</html>
